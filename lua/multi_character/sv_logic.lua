@@ -21,7 +21,7 @@ include("multi_character/sh_config.lua")
 MySQLite = MySQLite or {}
 MySQLite.Query = sql.Query
 
--- 🛠 Auto-patch: add 'notes' and 'inventory' column if missing
+-- Auto-patch: add 'notes' and 'inventory' column if missing
 local function EnsureCharacterColumns()
     local requiredColumns = {
         notes = "TEXT DEFAULT ''",
@@ -46,14 +46,14 @@ end
 
 hook.Add("Initialize", "MC_CheckSchema", EnsureCharacterColumns)
 
--- ☠️ Permakill logic
+-- Permakill logic
 hook.Add("PlayerDeath", "MC_PermakillOnDeath", function(ply)
     if not mc_config.PermakillEnabled then return end
     if not ply.CurrentCharacterID then return end
     MySQLite:Query("UPDATE characters SET is_dead = 1 WHERE id = " .. ply.CurrentCharacterID .. " AND steamid64 = '" .. ply:SteamID64() .. "'")
 end)
 
--- 📡 Broadcast character switches (for Live Viewer)
+-- Broadcast character switches (for Live Viewer)
 local function BroadcastCharSelection(ply, charID, charName, faction)
     net.Start("MC_CharacterSelectedBroadcast")
     net.WriteString(ply:Nick())
@@ -64,7 +64,7 @@ local function BroadcastCharSelection(ply, charID, charName, faction)
     net.Broadcast()
 end
 
--- 🔁 Utility: load all alive characters
+-- Utility: load all alive characters
 local function LoadCharactersFor(ply)
     local sid64 = ply:SteamID64()
     local chars = MySQLite:Query("SELECT * FROM characters WHERE steamid64 = '" .. sid64 .. "' AND is_dead = 0") or {}
@@ -74,12 +74,12 @@ local function LoadCharactersFor(ply)
     net.Send(ply)
 end
 
--- 📨 Character list request
+-- Character list request
 net.Receive("MC_RequestCharacters", function(_, ply)
     LoadCharactersFor(ply)
 end)
 
--- 🧍 Character select
+-- Character select
 net.Receive("MC_SelectCharacter", function(_, ply)
     local charID = net.ReadUInt(32)
     ply.CurrentCharacterID = charID
@@ -102,7 +102,7 @@ net.Receive("MC_SelectCharacter", function(_, ply)
         ply:SetPos(factionData.spawn)
     end
 
-    -- [NEW] Load inventory from stringified table
+    -- Load inventory from stringified table
     if char.inventory then
         local succ, decoded = pcall(util.JSONToTable, char.inventory)
         if succ and istable(decoded) then
@@ -121,7 +121,7 @@ net.Receive("MC_SelectCharacter", function(_, ply)
     ply:Spawn()
 end)
 
--- ➕ Character creation
+-- Character creation
 net.Receive("MC_CreateCharacter", function(_, ply)
     local name = sql.SQLStr(net.ReadString())
     local model = sql.SQLStr(net.ReadString())
@@ -138,7 +138,7 @@ net.Receive("MC_CreateCharacter", function(_, ply)
         end
     end
 
-    -- [NEW] Store inventory as JSON
+    -- Store inventory as JSON
     local inventoryTable = mc_config.Factions[net.ReadString()] and mc_config.Factions[net.ReadString()].inventory or {}
     local encodedInv = sql.SQLStr(util.TableToJSON(inventoryTable))
 
@@ -150,14 +150,14 @@ net.Receive("MC_CreateCharacter", function(_, ply)
     LoadCharactersFor(ply)
 end)
 
--- ❌ Character delete
+-- Character delete
 net.Receive("MC_DeleteCharacter", function(_, ply)
     local id = net.ReadUInt(32)
     MySQLite:Query("DELETE FROM characters WHERE id = " .. id .. " AND steamid64 = '" .. ply:SteamID64() .. "'")
     LoadCharactersFor(ply)
 end)
 
--- ✏️ Rename character
+-- Rename character
 net.Receive("MC_RenameCharacter", function(_, ply)
     local id = net.ReadUInt(32)
     local newName = sql.SQLStr(net.ReadString())

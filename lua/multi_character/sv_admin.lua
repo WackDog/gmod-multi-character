@@ -19,7 +19,7 @@ util.AddNetworkString("MC_AdminSendLogs")
 
 local LOG_PATH = "multi_character/admin_logs.txt"
 
--- 📝 Logging
+-- Logging
 local function LogAdminAction(ply, action)
     local line = os.date("[%Y-%m-%d %H:%M:%S] ") ..
         ply:Nick() .. " (" .. ply:SteamID64() .. ") " .. action .. "\n"
@@ -27,7 +27,7 @@ local function LogAdminAction(ply, action)
     print("[MC LOG] " .. line)
 end
 
--- 🧠 Debug Concommands
+-- Debug Concommands
 
 concommand.Add("MC_ListCharacters", function(ply, _, args)
     if not IsValid(ply) or not ply:IsSuperAdmin() then return end
@@ -69,7 +69,7 @@ concommand.Add("MC_ExportCharacters", function(ply)
     print("[MC] Character export saved to data/multi_character/export.csv")
 end)
 
--- 📡 Net Receivers
+-- Net Receivers
 
 net.Receive("MC_AdminRequestCharacters", function(_, ply)
     if not IsValid(ply) or not ply:IsSuperAdmin() then return end
