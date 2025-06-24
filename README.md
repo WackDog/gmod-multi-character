@@ -2,6 +2,8 @@
 
 A modular and extensible multi-character management system for Garry's Mod.
 
+Designed to plug in to a pre-existing server UI
+
 ## Features
 
 -  Multiple character slots per player
