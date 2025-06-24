@@ -108,5 +108,5 @@ To test character data, use `mock/mock_characters.sql` to prefill the `character
 
 ## 🧑‍💻 Author
 
-- Created by WackDog for interview/portfolio purposes.
+- Created by WackDog for portfolio purposes.
 - Not for resale or commercial GModStore listing.
