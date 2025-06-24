@@ -2,7 +2,7 @@
 
 A modular and extensible multi-character management system for Garry's Mod.
 
-Designed to plug in to a pre-existing server UI
+Designed to plug in to a pre-existing server UI, however my own UI is included for use if you don't have one.
 
 ## Features
 
