@@ -21,18 +21,30 @@ include("multi_character/sh_config.lua")
 MySQLite = MySQLite or {}
 MySQLite.Query = sql.Query
 
--- 🛠 Auto-patch: add 'notes' column if missing
-local function EnsureNotesColumn()
+-- 🛠 Auto-patch: add 'notes' and 'inventory' column if missing
+local function EnsureCharacterColumns()
+    local requiredColumns = {
+        notes = "TEXT DEFAULT ''",
+        inventory = "TEXT DEFAULT '{}'"
+    }
+
     local info = sql.Query("PRAGMA table_info(characters)")
     if not info then return end
+
+    local existing = {}
     for _, col in ipairs(info) do
-        if col.name == "notes" then return end
+        existing[col.name] = true
     end
-    sql.Query("ALTER TABLE characters ADD COLUMN notes TEXT;")
-    print("[MC] Added 'notes' column to characters table.")
+
+    for colName, colType in pairs(requiredColumns) do
+        if not existing[colName] then
+            sql.Query("ALTER TABLE characters ADD COLUMN " .. colName .. " " .. colType .. ";")
+            print("[MC] Added missing column '" .. colName .. "' to characters table.")
+        end
+    end
 end
 
-hook.Add("Initialize", "MC_CheckSchema", EnsureNotesColumn)
+hook.Add("Initialize", "MC_CheckSchema", EnsureCharacterColumns)
 
 -- ☠️ Permakill logic
 hook.Add("PlayerDeath", "MC_PermakillOnDeath", function(ply)
@@ -90,12 +102,16 @@ net.Receive("MC_SelectCharacter", function(_, ply)
         ply:SetPos(factionData.spawn)
     end
 
-    if factionData and factionData.inventory then
-        for class, amount in pairs(factionData.inventory) do
-            for i = 1, amount do
-                local wep = ply:Give(class)
-                if IsValid(wep) then
-                    wep:SetClip1(0)
+    -- [NEW] Load inventory from stringified table
+    if char.inventory then
+        local succ, decoded = pcall(util.JSONToTable, char.inventory)
+        if succ and istable(decoded) then
+            for class, amount in pairs(decoded) do
+                for i = 1, amount do
+                    local wep = ply:Give(class)
+                    if IsValid(wep) then
+                        wep:SetClip1(0)
+                    end
                 end
             end
         end
@@ -122,9 +138,13 @@ net.Receive("MC_CreateCharacter", function(_, ply)
         end
     end
 
+    -- [NEW] Store inventory as JSON
+    local inventoryTable = mc_config.Factions[net.ReadString()] and mc_config.Factions[net.ReadString()].inventory or {}
+    local encodedInv = sql.SQLStr(util.TableToJSON(inventoryTable))
+
     MySQLite:Query(string.format(
-        "INSERT INTO characters (steamid64, name, model, faction, is_dead, backstory) VALUES ('%s', %s, %s, %s, 0, %s)",
-        sid64, name, model, faction, backstory or "''"
+        "INSERT INTO characters (steamid64, name, model, faction, is_dead, backstory, inventory) VALUES ('%s', %s, %s, %s, 0, %s, %s)",
+        sid64, name, model, faction, backstory or "''", encodedInv
     ))
 
     LoadCharactersFor(ply)
