@@ -1,15 +1,32 @@
 -- sv_init.lua
--- Entry point for Multi-Character System (server-only)
+--[[
+    File: sv_init.lua
+    Description: Initialization entry point for the Multi-Character System. 
+                 Registers and loads all client/server/shared components. 
+                 Ensures network delivery and modular separation.
 
--- 📦 Send client-side scripts
+    Scope: Server
+    Author: WackDog
+]]
+
+-- Shared
+AddCSLuaFile("multi_character/sh_config.lua")
+include("multi_character/sh_config.lua")
+
+-- Client-side
 AddCSLuaFile("multi_character/cl_menu.lua")
 AddCSLuaFile("multi_character/cl_admin.lua")
-AddCSLuaFile("multi_character/sh_config.lua")
 
--- 🔄 Load server + shared logic
-include("multi_character/sh_config.lua")
-include("multi_character/sv_logic.lua")
-include("multi_character/sv_admin.lua")
+-- Server-side
+if SERVER then
+    include("multi_character/sv_logic.lua")
+    include("multi_character/sv_admin.lua")
+end
 
--- ✅ Loaded
+-- Client-side (optional for dev environment if running on listen server)
+if CLIENT then
+    include("multi_character/cl_menu.lua")
+    include("multi_character/cl_admin.lua")
+end
+
 print("[MultiCharacter v1.0] Server initialized.")
