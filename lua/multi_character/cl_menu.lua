@@ -9,13 +9,21 @@
 
 -- Disable default UI if opted out
 
+include("multi_character/sh_config.lua")
+
 function MC_OpenCharacterMenu()
     net.Start("MC_RequestCharacters")
     net.SendToServer()
 end
 
 -- Disable default UI if opted out
-if mc_config and mc_config.DisableDefaultUI then return end
+-- DISABLED BY PATCH: if mc_config and mc_config.DisableDefaultUI then return end
+-- Injected fallback if mc_config is nil
+if not mc_config then
+    mc_config = {}
+    mc_config.Factions = { Citizen = { spawn = Vector(0, 0, 0), inventory = {} } }
+end
+
 
 net.Receive("MC_SendCharacters", function()
     local chars = net.ReadTable()
@@ -135,6 +143,28 @@ net.Receive("MC_SendCharacters", function()
         factionDropdown:SetSize(230, 25)
         factionDropdown:SetValue("Select Faction")
 
+	factionDropdown.OnSelect = function(panel, index, value, data)
+	    selectedFaction = value
+
+	    local factionData = mc_config.Factions[value]
+	    if factionData and factionData.model then
+	        modelPanel:SetModel(factionData.model)
+
+	        local ent = modelPanel:GetEntity()
+	        local mn, mx = ent:GetRenderBounds()
+	        local size = 0
+	        size = math.max(size, math.abs(mn.x) + math.abs(mx.x))
+	        size = math.max(size, math.abs(mn.y) + math.abs(mx.y))
+	        size = math.max(size, math.abs(mn.z) + math.abs(mx.z))
+
+	        modelPanel:SetFOV(50)
+	        modelPanel:SetCamPos(Vector(size, size, size))
+	        modelPanel:SetLookAt((mn + mx) * 0.5)
+	    end
+	end
+
+
+
         local factionDesc = vgui.Create("DLabel", CreateFrame)
         factionDesc:SetPos(10, 60)
         factionDesc:SetSize(480, 30)
@@ -149,8 +179,29 @@ net.Receive("MC_SendCharacters", function()
         local modelPanel = vgui.Create("DModelPanel", CreateFrame)
         modelPanel:SetPos(260, 100)
         modelPanel:SetSize(230, 160)
-        modelPanel:SetModel("models/Humans/Group01/male_02.mdl")
-        modelPanel:SetFOV(30)
+        
+    
+	local model = modelComboBox and modelComboBox:GetValue()
+	if not model or model == "" then
+	    model = "models/player/group01/male_07.mdl" -- default citizen
+	end
+
+	if model then
+	    modelPanel:SetModel(model)
+
+	    local ent = modelPanel:GetEntity()
+	    local mn, mx = ent:GetRenderBounds()
+	    local size = 0
+	    size = math.max(size, math.abs(mn.x) + math.abs(mx.x))
+	    size = math.max(size, math.abs(mn.y) + math.abs(mx.y))
+	    size = math.max(size, math.abs(mn.z) + math.abs(mx.z))
+
+	    modelPanel:SetFOV(50)
+	    modelPanel:SetCamPos(Vector(size, size, size))
+	    modelPanel:SetLookAt((mn + mx) * 0.5)
+	end
+
+	modelPanel:SetFOV(30)
         modelPanel:SetCamPos(Vector(50, 0, 50))
         modelPanel:SetLookAt(Vector(0, 0, 50))
 

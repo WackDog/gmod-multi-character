@@ -50,7 +50,7 @@ hook.Add("Initialize", "MC_CheckSchema", EnsureCharacterColumns)
 hook.Add("PlayerDeath", "MC_PermakillOnDeath", function(ply)
     if not mc_config.PermakillEnabled then return end
     if not ply.CurrentCharacterID then return end
-    MySQLite:Query("UPDATE characters SET is_dead = 1 WHERE id = " .. ply.CurrentCharacterID .. " AND steamid64 = '" .. ply:SteamID64() .. "'")
+    MySQLite.Query("UPDATE characters SET is_dead = 1 WHERE id = " .. ply.CurrentCharacterID .. " AND steamid64 = '" .. ply:SteamID64() .. "'")
 end)
 
 -- Broadcast character switches (for Live Viewer)
@@ -67,7 +67,7 @@ end
 -- Utility: load all alive characters
 local function LoadCharactersFor(ply)
     local sid64 = ply:SteamID64()
-    local chars = MySQLite:Query("SELECT * FROM characters WHERE steamid64 = '" .. sid64 .. "' AND is_dead = 0") or {}
+    local chars = MySQLite.Query("SELECT * FROM characters WHERE steamid64 = '" .. sid64 .. "' AND is_dead = 0") or {}
 
     net.Start("MC_SendCharacters")
     net.WriteTable(chars)
@@ -142,7 +142,7 @@ net.Receive("MC_CreateCharacter", function(_, ply)
     local inventoryTable = mc_config.Factions[net.ReadString()] and mc_config.Factions[net.ReadString()].inventory or {}
     local encodedInv = sql.SQLStr(util.TableToJSON(inventoryTable))
 
-    MySQLite:Query(string.format(
+    MySQLite.Query(string.format(
         "INSERT INTO characters (steamid64, name, model, faction, is_dead, backstory, inventory) VALUES ('%s', %s, %s, %s, 0, %s, %s)",
         sid64, name, model, faction, backstory or "''", encodedInv
     ))
@@ -153,7 +153,7 @@ end)
 -- Character delete
 net.Receive("MC_DeleteCharacter", function(_, ply)
     local id = net.ReadUInt(32)
-    MySQLite:Query("DELETE FROM characters WHERE id = " .. id .. " AND steamid64 = '" .. ply:SteamID64() .. "'")
+    MySQLite.Query("DELETE FROM characters WHERE id = " .. id .. " AND steamid64 = '" .. ply:SteamID64() .. "'")
     LoadCharactersFor(ply)
 end)
 
@@ -161,7 +161,7 @@ end)
 net.Receive("MC_RenameCharacter", function(_, ply)
     local id = net.ReadUInt(32)
     local newName = sql.SQLStr(net.ReadString())
-    MySQLite:Query(string.format(
+    MySQLite.Query(string.format(
         "UPDATE characters SET name = %s WHERE id = %d AND steamid64 = '%s'",
         newName, id, ply:SteamID64()
     ))

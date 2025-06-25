@@ -40,7 +40,7 @@ mc_config.Factions = {
         name = "Civil Protection",
         description = "The authoritarian city police force, tasked with enforcing Combine law.",
         models = {
-            "models/police.mdl"
+            "models/player/police.mdl"
         },
         spawn = Vector(1000, 0, 0),
         inventory = {
@@ -52,7 +52,7 @@ mc_config.Factions = {
         name = "Overwatch",
         description = "Elite transhuman military units used for suppression and tactical operations.",
         models = {
-            "models/combine_soldier.mdl"
+            "models/player/combine_soldier.mdl"
         },
         spawn = Vector(2000, 0, 0),
         inventory = {

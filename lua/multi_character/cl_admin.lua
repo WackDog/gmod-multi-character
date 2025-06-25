@@ -7,6 +7,7 @@
     Author: WackDog
 ]]
 
+include("multi_character/sh_config.lua")
 
 MC_LiveCharacterList = MC_LiveCharacterList or {}
 
